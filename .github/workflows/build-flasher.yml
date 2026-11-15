@@ -52,7 +52,7 @@ jobs:
             --collect-data esptool run.py
           hdiutil create -volname AI-Passport-Flasher \
             -srcfolder dist/AI-Passport-Flasher.app -ov -format UDZO \
-            dist/AI-Passport-Flasher-macos-${{ runner.arch }}.dmg
+            dist/AI-Passport-Flasher-macos-arm64.dmg
           ls -la dist
 
       - name: Build (Windows onefile exe)
@@ -94,7 +94,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           pattern: AI-Passport-Flasher-*
-          merge-multiple: true
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -102,7 +101,7 @@ jobs:
           name: ${{ github.ref_name }}
           generate_release_notes: true
           files: |
-            AI-Passport-Flasher-macos-arm64.dmg
-            AI-Passport-Flasher.exe
-            AI-Passport-Flasher-linux-x86_64.tar.gz
+            AI-Passport-Flasher-macos/*.dmg
+            AI-Passport-Flasher-windows/*.exe
+            AI-Passport-Flasher-linux/*.tar.gz
           fail_on_unmatched_files: false
