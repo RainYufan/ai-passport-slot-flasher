@@ -101,7 +101,7 @@ jobs:
           name: ${{ github.ref_name }}
           generate_release_notes: true
           files: |
-            AI-Passport-Flasher-macos/*.dmg
-            AI-Passport-Flasher-windows/*.exe
+            AI-Passport-Flasher-macos/dist/*.dmg
+            AI-Passport-Flasher-windows/dist/*.exe
             AI-Passport-Flasher-linux/*.tar.gz
           fail_on_unmatched_files: false
