@@ -34,7 +34,6 @@
 - 或从源码运行:Python ≥3.9,然后
 
   ```bash
-  cd flasher
   pip install -r requirements.txt
   python run.py
   ```

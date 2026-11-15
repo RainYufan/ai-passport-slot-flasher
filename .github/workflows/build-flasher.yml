@@ -37,17 +37,16 @@ jobs:
         shell: bash
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install -r flasher/requirements.txt pyinstaller
+          python -m pip install -r requirements.txt pyinstaller
 
       - name: Run tests (headless)
+        shell: bash
         run: |
-          cd flasher
           QT_QPA_PLATFORM=offscreen python -m unittest discover -s tests
 
       - name: Build (macOS .app)
         if: runner.os == 'macOS'
         run: |
-          cd flasher
           pyinstaller --noconfirm --windowed --name AI-Passport-Flasher \
             --osx-bundle-identifier org.folotoy.aipassport.flasher \
             --collect-data esptool --collect-submodules esptool run.py
@@ -59,7 +58,6 @@ jobs:
       - name: Build (Windows onefile exe)
         if: runner.os == 'Windows'
         run: |
-          cd flasher
           pyinstaller --noconfirm --onefile --windowed --name AI-Passport-Flasher \
             --collect-data esptool --collect-submodules esptool run.py
           ls -la dist
@@ -67,7 +65,6 @@ jobs:
       - name: Build (Linux AppImage)
         if: runner.os == 'Linux'
         run: |
-          cd flasher
           pyinstaller --noconfirm --onefile --windowed --name AI-Passport-Flasher \
             --collect-data esptool --collect-submodules esptool run.py
           mkdir -p AppDir/usr/bin
@@ -90,10 +87,10 @@ jobs:
         with:
           name: AI-Passport-Flasher-${{ matrix.name }}
           path: |
-            flasher/dist/*.dmg
-            flasher/dist/*.exe
-            flasher/*.AppImage
-            flasher/*.tar.gz
+            dist/*.dmg
+            dist/*.exe
+            *.AppImage
+            *.tar.gz
           if-no-files-found: warn
 
   release:

@@ -39,7 +39,6 @@ from the device), and it writes **only that slot's offset** with verify.
 - Or run from source: Python ≥3.9, then
 
   ```bash
-  cd flasher
   pip install -r requirements.txt
   python run.py
   ```
