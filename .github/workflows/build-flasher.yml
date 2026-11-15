@@ -63,25 +63,15 @@ jobs:
             --collect-data esptool run.py
           ls -la dist
 
-      - name: Build (Linux AppImage)
+      - name: Build (Linux)
         if: runner.os == 'Linux'
+        shell: bash
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name AI-Passport-Flasher \
-            --collect-data esptool run.py
-          mkdir -p AppDir/usr/bin
-          cp dist/AI-Passport-Flasher AppDir/usr/bin/
-          printf '#!/bin/sh\nHERE="$(dirname "$(readlink -f "$0")")"\nexec "$HERE/usr/bin/AI-Passport-Flasher" "$@"\n' > AppDir/AppRun
-          chmod +x AppDir/AppRun
-          printf '[Desktop Entry]\nName=AI Passport Flasher\nExec=AI-Passport-Flasher\nType=Application\nCategories=Utility;\n' > AppDir/AI-Passport-Flasher.desktop
-          wget -q -O appimagetool "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" || true
-          chmod +x appimagetool 2>/dev/null || true
-          if [ -x ./appimagetool ]; then
-            ARCH=x86_64 ./appimagetool AppDir AI-Passport-Flasher-x86_64.AppImage
-            rm -rf AppDir
-          else
-            # 兜底:打包 tar.gz
-            tar -czf AI-Passport-Flasher-linux-x86_64.tar.gz -C dist AI-Passport-Flasher
-          fi
+          pyinstaller --noconfirm --windowed --name AI-Passport-Flasher             --collect-data esptool run.py
+          cp -R dist/AI-Passport-Flasher dist-pkg
+          printf '#!/bin/sh\nHERE="$(dirname "$(readlink -f "$0")")"\nexec "$HERE/AI-Passport-Flasher" "$@"\n' > dist-pkg/run.sh
+          chmod +x dist-pkg/AI-Passport-Flasher dist-pkg/run.sh
+          tar -czf AI-Passport-Flasher-linux-x86_64.tar.gz -C dist-pkg .
           ls -la
 
       - uses: actions/upload-artifact@v4
@@ -114,6 +104,5 @@ jobs:
           files: |
             AI-Passport-Flasher-macos-arm64.dmg
             AI-Passport-Flasher.exe
-            AI-Passport-Flasher-x86_64.AppImage
             AI-Passport-Flasher-linux-x86_64.tar.gz
           fail_on_unmatched_files: false
