@@ -1,0 +1,59 @@
+name: build-flasher
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["flasher-v*"]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            name: macos
+          - os: windows-latest
+            name: windows
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r flasher/requirements.txt pyinstaller
+
+      - name: Run tests (headless)
+        run: |
+          cd flasher
+          python -m unittest discover -s tests
+
+      - name: Build with PyInstaller
+        run: |
+          cd flasher
+          pyinstaller --noconfirm --windowed --name AI-Passport-Flasher run.py
+
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          cd flasher/dist
+          zip -qr "AI-Passport-Flasher-macos-${{ runner.arch }}.zip" AI-Passport-Flasher.app
+          ls -la
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd flasher/dist
+          Compress-Archive -Path AI-Passport-Flasher -DestinationPath "AI-Passport-Flasher-windows-x64.zip"
+          Get-ChildItem
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AI-Passport-Flasher-${{ matrix.name }}
+          path: flasher/dist/*.zip
