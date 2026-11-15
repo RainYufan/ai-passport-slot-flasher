@@ -36,7 +36,7 @@ jobs:
       - name: Build with PyInstaller
         run: |
           cd flasher
-          pyinstaller --noconfirm --windowed --name AI-Passport-Flasher run.py
+          pyinstaller --noconfirm --windowed --name AI-Passport-Flasher --collect-data esptool --collect-submodules esptool run.py
 
       - name: Package (macOS)
         if: runner.os == 'macOS'

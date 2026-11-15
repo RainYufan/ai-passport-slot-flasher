@@ -50,7 +50,8 @@
 - 刷写后端 `ai_passport_flasher/flash.py` 进程内调用 esptool,打包后依然可用。
 - 测试:`python -m unittest discover -s tests`(GUI 测试用
   `QT_QPA_PLATFORM=offscreen` 无头运行)。
-- 打包:`pyinstaller --noconfirm --windowed --name AI-Passport-Flasher run.py`
+- 打包:`pyinstaller --noconfirm --windowed --name AI-Passport-Flasher \
+    --collect-data esptool --collect-submodules esptool run.py`
 
 ## 许可
 

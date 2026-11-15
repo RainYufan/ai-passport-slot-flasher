@@ -60,7 +60,8 @@ Slot limits are 2 MB (3-Slot edition) or ≈3.56 MB (Dual-Slot edition); see the
   so it keeps working inside the packaged app.
 - Tests: `python -m unittest discover -s tests` (GUI tests run headless with
   `QT_QPA_PLATFORM=offscreen`).
-- Package: `pyinstaller --noconfirm --windowed --name AI-Passport-Flasher run.py`
+- Package: `pyinstaller --noconfirm --windowed --name AI-Passport-Flasher \
+    --collect-data esptool --collect-submodules esptool run.py`
 
 ## License
 
