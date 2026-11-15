@@ -149,23 +149,27 @@ def inspect_image(path: str) -> ImageInfo:
         data = f.read()
     if not data:
         raise ValueError("文件为空")
+    # 先判合并镜像:bootloader 也以 0xE9 开头,不能只看首字节。
+    # 合并镜像的标志是 0x8000 处有一张合法分区表(nvs@0x9000 起步)。
+    if len(data) >= 0x9000:
+        try:
+            parts = parse_partition_table(data[0x8000:0x9000])
+            if parts and parts[0].label == "nvs" and parts[0].offset == 0x9000:
+                apps = [p for p in parts if p.kind == PART_TYPE_APP]
+                if not apps:
+                    raise ValueError("合并镜像里没有 app 分区")
+                app_part = apps[0]
+                app_bytes = data[app_part.offset:app_part.offset + app_part.size]
+                size = _segments_size(app_bytes)
+                desc = _find_app_desc(app_bytes) or ("?", "?", "?")
+                return ImageInfo("merged", size, *desc, first_offset=app_part.offset)
+        except ValueError:
+            pass  # 不是合并镜像,继续按 app 镜像判断
     if data[0] == ESP_IMAGE_MAGIC:
         size = _segments_size(data)
         desc = _find_app_desc(data) or ("?", "?", "?")
         return ImageInfo("app", size, *desc, first_offset=0)
-    # 尝试按合并镜像解析:分区表在 0x8000
-    try:
-        parts = parse_partition_table(data[0x8000:0x9000])
-    except ValueError as exc:
-        raise ValueError("无法识别的固件文件(既不是 app 镜像也不是合并镜像)") from exc
-    apps = [p for p in parts if p.kind == PART_TYPE_APP]
-    if not apps:
-        raise ValueError("合并镜像里没有 app 分区")
-    app_part = apps[0]
-    app_bytes = data[app_part.offset:app_part.offset + app_part.size]
-    size = _segments_size(app_bytes)
-    desc = _find_app_desc(app_bytes) or ("?", "?", "?")
-    return ImageInfo("merged", size, *desc, first_offset=app_part.offset)
+    raise ValueError("无法识别的固件文件(既不是 app 镜像也不是合并镜像)")
 
 
 def extract_app_image(path: str, out_path: str) -> ImageInfo:
