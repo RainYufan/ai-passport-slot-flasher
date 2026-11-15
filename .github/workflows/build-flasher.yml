@@ -49,7 +49,7 @@ jobs:
         run: |
           pyinstaller --noconfirm --windowed --name AI-Passport-Flasher \
             --osx-bundle-identifier org.folotoy.aipassport.flasher \
-            --collect-data esptool --collect-submodules esptool run.py
+            --collect-data esptool run.py
           hdiutil create -volname AI-Passport-Flasher \
             -srcfolder dist/AI-Passport-Flasher.app -ov -format UDZO \
             dist/AI-Passport-Flasher-macos-${{ runner.arch }}.dmg
@@ -57,16 +57,17 @@ jobs:
 
       - name: Build (Windows onefile exe)
         if: runner.os == 'Windows'
+        shell: bash
         run: |
           pyinstaller --noconfirm --onefile --windowed --name AI-Passport-Flasher \
-            --collect-data esptool --collect-submodules esptool run.py
+            --collect-data esptool run.py
           ls -la dist
 
       - name: Build (Linux AppImage)
         if: runner.os == 'Linux'
         run: |
           pyinstaller --noconfirm --onefile --windowed --name AI-Passport-Flasher \
-            --collect-data esptool --collect-submodules esptool run.py
+            --collect-data esptool run.py
           mkdir -p AppDir/usr/bin
           cp dist/AI-Passport-Flasher AppDir/usr/bin/
           printf '#!/bin/sh\nHERE="$(dirname "$(readlink -f "$0")")"\nexec "$HERE/usr/bin/AI-Passport-Flasher" "$@"\n' > AppDir/AppRun
