@@ -15,6 +15,8 @@ jobs:
             name: macos
           - os: windows-latest
             name: windows
+          - os: ubuntu-latest
+            name: linux
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -22,6 +24,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      - name: Install system deps (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libxkbcommon-x11-0 libxcb-cursor0 \
+            libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-xinerama0 \
+            libxcb-render-util0 libgl1-mesa-glx
 
       - name: Install dependencies
         run: |
@@ -31,29 +41,56 @@ jobs:
       - name: Run tests (headless)
         run: |
           cd flasher
-          python -m unittest discover -s tests
+          QT_QPA_PLATFORM=offscreen python -m unittest discover -s tests
 
-      - name: Build with PyInstaller
-        run: |
-          cd flasher
-          pyinstaller --noconfirm --windowed --name AI-Passport-Flasher --collect-data esptool --collect-submodules esptool run.py
-
-      - name: Package (macOS)
+      - name: Build (macOS .app)
         if: runner.os == 'macOS'
         run: |
-          cd flasher/dist
-          zip -qr "AI-Passport-Flasher-macos-${{ runner.arch }}.zip" AI-Passport-Flasher.app
-          ls -la
+          cd flasher
+          pyinstaller --noconfirm --windowed --name AI-Passport-Flasher \
+            --osx-bundle-identifier org.folotoy.aipassport.flasher \
+            --collect-data esptool --collect-submodules esptool run.py
+          hdiutil create -volname AI-Passport-Flasher \
+            -srcfolder dist/AI-Passport-Flasher.app -ov -format UDZO \
+            dist/AI-Passport-Flasher-macos-${{ runner.arch }}.dmg
+          ls -la dist
 
-      - name: Package (Windows)
+      - name: Build (Windows onefile exe)
         if: runner.os == 'Windows'
-        shell: pwsh
         run: |
-          cd flasher/dist
-          Compress-Archive -Path AI-Passport-Flasher -DestinationPath "AI-Passport-Flasher-windows-x64.zip"
-          Get-ChildItem
+          cd flasher
+          pyinstaller --noconfirm --onefile --windowed --name AI-Passport-Flasher \
+            --collect-data esptool --collect-submodules esptool run.py
+          ls -la dist
+
+      - name: Build (Linux AppImage)
+        if: runner.os == 'Linux'
+        run: |
+          cd flasher
+          pyinstaller --noconfirm --onefile --windowed --name AI-Passport-Flasher \
+            --collect-data esptool --collect-submodules esptool run.py
+          mkdir -p AppDir/usr/bin
+          cp dist/AI-Passport-Flasher AppDir/usr/bin/
+          printf '#!/bin/sh\nHERE="$(dirname "$(readlink -f "$0")")"\nexec "$HERE/usr/bin/AI-Passport-Flasher" "$@"\n' > AppDir/AppRun
+          chmod +x AppDir/AppRun
+          printf '[Desktop Entry]\nName=AI Passport Flasher\nExec=AI-Passport-Flasher\nType=Application\nCategories=Utility;\n' > AppDir/AI-Passport-Flasher.desktop
+          wget -q -O appimagetool "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" || true
+          chmod +x appimagetool 2>/dev/null || true
+          if [ -x ./appimagetool ]; then
+            ARCH=x86_64 ./appimagetool AppDir AI-Passport-Flasher-x86_64.AppImage
+            rm -rf AppDir
+          else
+            # 兜底:打包 tar.gz
+            tar -czf AI-Passport-Flasher-linux-x86_64.tar.gz -C dist AI-Passport-Flasher
+          fi
+          ls -la
 
       - uses: actions/upload-artifact@v4
         with:
           name: AI-Passport-Flasher-${{ matrix.name }}
-          path: flasher/dist/*.zip
+          path: |
+            flasher/dist/*.dmg
+            flasher/dist/*.exe
+            flasher/*.AppImage
+            flasher/*.tar.gz
+          if-no-files-found: warn

@@ -24,6 +24,11 @@
 
 ## 获取
 
+- 预打包安装包由
+  [`.github/workflows/build-flasher.yml`](.github/workflows/build-flasher.yml)
+  生成:macOS `.dmg`、Windows 单文件 `.exe`、Linux AppImage。在 Actions 页
+  手动触发,或推送 `flasher-v*` 标签即可。
+
 - 预打包文件由 [`.github/workflows/build-flasher.yml`](.github/workflows/build-flasher.yml)
   的 Release 构建产出(macOS arm64 `.app`、Windows x64)。
 - 或从源码运行:Python ≥3.9,然后

@@ -28,6 +28,11 @@ from the device), and it writes **only that slot's offset** with verify.
 
 ## Download
 
+- Prebuilt installers are produced by
+  [`.github/workflows/build-flasher.yml`](.github/workflows/build-flasher.yml):
+  macOS `.dmg`, Windows one-file `.exe`, and Linux AppImage. Trigger it from
+  the Actions tab or push a `flasher-v*` tag.
+
 - Prebuilt packages are attached to releases built by
   [`.github/workflows/build-flasher.yml`](.github/workflows/build-flasher.yml)
   (macOS arm64 `.app`, Windows x64).
