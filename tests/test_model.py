@@ -104,8 +104,8 @@ class ImageTests(unittest.TestCase):
 
     def test_inspect_and_extract_merged(self):
         app = build_app_image()
-        # 合并镜像:bootloader 区 + 分区表 + app 分区(0x10000 起,1MB)
-        merged = bytearray(0x10000 + 0x100000)
+        # 合并镜像:bootloader 区 + 分区表 + app 镜像,文件正好在 app 末尾结束
+        merged = bytearray(0x10000 + len(app))
         merged[0] = 0xE9  # bootloader 同样以 0xE9 开头,分类必须靠分区表
         tbl = build_partition_table(entries_for(LAYOUT_THREE_SLOT))
         merged[0x8000:0x9000] = tbl[:0x1000]

@@ -160,13 +160,13 @@ def inspect_image(path: str) -> ImageInfo:
                     raise ValueError("合并镜像里没有 app 分区")
                 app_part = apps[0]
                 app_bytes = data[app_part.offset:app_part.offset + app_part.size]
-                size = _segments_size(app_bytes)
+                size = len(app_bytes)  # 整段区域,不裁剪(镜像末尾有校验摘要,裁剪会坏)
                 desc = _find_app_desc(app_bytes) or ("?", "?", "?")
                 return ImageInfo("merged", size, *desc, first_offset=app_part.offset)
         except ValueError:
             pass  # 不是合并镜像,继续按 app 镜像判断
     if data[0] == ESP_IMAGE_MAGIC:
-        size = _segments_size(data)
+        size = len(data)  # app 镜像整文件刷入,大小即文件大小
         desc = _find_app_desc(data) or ("?", "?", "?")
         return ImageInfo("app", size, *desc, first_offset=0)
     raise ValueError("无法识别的固件文件(既不是 app 镜像也不是合并镜像)")
@@ -179,6 +179,7 @@ def extract_app_image(path: str, out_path: str) -> ImageInfo:
         raise ValueError("只有合并镜像才需要提取")
     with open(path, "rb") as f:
         data = f.read()
+    # 整段复制 app 分区区域(不做长度裁剪),与直接整段刷入的字节一致。
     app_bytes = data[info.first_offset:info.first_offset + info.size]
     with open(out_path, "wb") as f:
         f.write(app_bytes)

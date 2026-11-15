@@ -7,6 +7,7 @@ import os
 import sys
 
 from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal, Slot
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -135,6 +136,7 @@ class MainWindow(QMainWindow):
         self.progress.setRange(0, 100)
         root.addWidget(self.progress)
         self.log_view = QPlainTextEdit()
+        self.log_view.setFont(QFont("Menlo", 11))  # 固定等宽字体,避免默认字体缺失
         self.log_view.setReadOnly(True)
         self.log_view.setMaximumBlockCount(2000)
         root.addWidget(self.log_view, 1)
@@ -172,22 +174,24 @@ class MainWindow(QMainWindow):
         self.device_status.setText(f"正在检测 {port} …")
         self._layout = None
 
-        def run():
-            try:
-                layout = flash_backend.detect_device_layout(port, log=self._log)
-                self._on_detect_done(layout, "")
-            except Exception as exc:  # noqa: BLE001
-                self._on_detect_done(None, str(exc))
-
-        class _Task(QRunnable):
-            def __init__(self, fn):
+        class _Detect(QRunnable):
+            def __init__(self, port):
                 super().__init__()
-                self.fn = fn
+                self._port = port
+                self.signals = _Signals()
 
             def run(self):
-                self.fn()
+                try:
+                    layout = flash_backend.detect_device_layout(
+                        self._port, log=self.signals.log.emit)
+                    self.signals.detect_done.emit(layout, "")
+                except Exception as exc:  # noqa: BLE001
+                    self.signals.detect_done.emit(None, str(exc))
 
-        self._pool.start(_Task(run))
+        task = _Detect(port)
+        task.signals.log.connect(self._log)          # 队列连接,回主线程
+        task.signals.detect_done.connect(self._on_detect_done)
+        self._pool.start(task)
 
     def _on_detect_done(self, layout, err):
         if err:
@@ -339,6 +343,7 @@ class MainWindow(QMainWindow):
 
 def main() -> int:
     app = QApplication(sys.argv)
+    app.setFont(QFont("PingFang SC", 13))  # 全局中文字体,避免缺字体
     win = MainWindow()
     win.show()
     return app.exec()
