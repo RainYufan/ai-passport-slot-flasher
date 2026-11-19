@@ -44,8 +44,9 @@ jobs:
         run: |
           QT_QPA_PLATFORM=offscreen python -m unittest discover -s tests
 
-      - name: Build (macOS .app)
+      - name: Build (macOS .app + dmg)
         if: runner.os == 'macOS'
+        shell: bash
         run: |
           pyinstaller --noconfirm --windowed --name AI-Passport-Flasher \
             --osx-bundle-identifier org.folotoy.aipassport.flasher \
@@ -67,7 +68,8 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          pyinstaller --noconfirm --windowed --name AI-Passport-Flasher             --collect-data esptool run.py
+          pyinstaller --noconfirm --windowed --name AI-Passport-Flasher \
+            --collect-data esptool run.py
           cp -R dist/AI-Passport-Flasher dist-pkg
           printf '#!/bin/sh\nHERE="$(dirname "$(readlink -f "$0")")"\nexec "$HERE/AI-Passport-Flasher" "$@"\n' > dist-pkg/run.sh
           chmod +x dist-pkg/AI-Passport-Flasher dist-pkg/run.sh
@@ -80,7 +82,6 @@ jobs:
           path: |
             dist/*.dmg
             dist/*.exe
-            *.AppImage
             *.tar.gz
           if-no-files-found: warn
 
@@ -101,11 +102,11 @@ jobs:
         shell: bash
         run: |
           pyinstaller --noconfirm --onefile --console --name extract_play extract_play.py
-          ls -la dist
+          cp dist/extract_play.exe extract_play.exe
       - uses: actions/upload-artifact@v4
         with:
           name: extract-play-exe
-          path: dist/extract_play.exe
+          path: extract_play.exe
 
   release:
     needs: [build, build-extract]
@@ -121,9 +122,14 @@ jobs:
         with:
           pattern: extract-play-exe
       - name: Publish GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create "${{ github.ref_name }}"             --title "${{ github.ref_name }}" --generate-notes || true
-          find . -type f \( -name "*.dmg" -o -name "*.exe" -o -name "*.tar.gz" \) \
-            -print -exec gh release upload "${{ github.ref_name }}" {} --clobber \;
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            AI-Passport-Flasher-macos/dist/*.dmg
+            AI-Passport-Flasher-windows/dist/*.exe
+            AI-Passport-Flasher-linux/*.tar.gz
+            extract-play-exe/*.exe
+          fail_on_unmatched_files: false
