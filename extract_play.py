@@ -74,11 +74,10 @@ def sanitize(name: str) -> str:
     return re.sub(r'[\\/:*?"<>|\s\u00b7]+', "_", name).strip("_")
 
 
-def main() -> int:
-    url = sys.argv[1] if len(sys.argv) > 1 else input("请输入玩法链接: ").strip()
-    if not url:
-        raise SystemExit("没有输入链接。")
-
+def process_play(url: str, log=None) -> tuple:
+    """下载并提取;返回 (merged_path, app_path)。log 为进度回调。"""
+    if log is None:
+        log = print
     plays = fetch_plays()
     play = find_play(plays, url)
     title = play.get("title") or {}
@@ -100,12 +99,12 @@ def main() -> int:
 
     if expect_sha:
         actual = hashlib.sha256(data).hexdigest()
-        print(f"SHA-256: {actual}")
+        log(f"SHA-256: {actual}")
         if actual != expect_sha:
             raise SystemExit("SHA-256 校验失败!下载的文件可能损坏,请重试。")
-        print("SHA-256 校验通过。")
+        log("SHA-256 校验通过。")
     else:
-        print("平台未提供 SHA-256,跳过校验。")
+        log("平台未提供 SHA-256,跳过校验。")
 
     if len(data) < 0x9000:
         raise SystemExit("文件太小,不像合并镜像。")
@@ -115,15 +114,23 @@ def main() -> int:
     if not apps:
         raise SystemExit("合并镜像里没有找到 app 分区。")
     label, kind, subtype, offset, size = apps[0]
-    print(f"app 分区: {label} @ 0x{offset:x}")
+    log(f"app 分区: {label} @ 0x{offset:x}")
 
-    app = data[offset:]  # 整段提取,不裁剪(裁剪会破坏末尾校验摘要)
+    app = data[offset:]
     with open(app_path, "wb") as f:
         f.write(app)
+    log(f"app 镜像大小: {len(app)} 字节 ({len(app)/1024/1024:.2f} MB)")
+    return os.path.abspath(merged_path), os.path.abspath(app_path)
 
+
+def main() -> int:
+    url = sys.argv[1] if len(sys.argv) > 1 else input("请输入玩法链接: ").strip()
+    if not url:
+        raise SystemExit("没有输入链接。")
+    merged, app = process_play(url)
     print(f"\n完成:")
-    print(f"  合并镜像: {os.path.abspath(merged_path)} ({len(data)} 字节)")
-    print(f"  app 镜像: {os.path.abspath(app_path)} ({len(app)} 字节, {len(app)/1024/1024:.2f} MB)")
+    print(f"  合并镜像: {merged}")
+    print(f"  app 镜像: {app}")
     print("\n把 *-app.bin 拖进「AI Passport 槽位刷写助手」选择固件即可刷入槽位。")
     return 0
 
