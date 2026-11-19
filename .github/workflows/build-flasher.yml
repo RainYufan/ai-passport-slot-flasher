@@ -84,8 +84,31 @@ jobs:
             *.tar.gz
           if-no-files-found: warn
 
+  build-extract:
+    if: startsWith(github.ref, 'refs/tags/flasher-v')
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install PyInstaller
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyinstaller
+      - name: Build extract_play.exe
+        shell: bash
+        run: |
+          pyinstaller --noconfirm --onefile --console --name extract_play extract_play.py
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: extract-play-exe
+          path: dist/extract_play.exe
+
   release:
-    needs: build
+    needs: [build, build-extract]
     if: startsWith(github.ref, 'refs/tags/flasher-v')
     runs-on: ubuntu-latest
     permissions:
@@ -94,6 +117,9 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           pattern: AI-Passport-Flasher-*
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: extract-play-exe
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -104,4 +130,5 @@ jobs:
             AI-Passport-Flasher-macos/dist/*.dmg
             AI-Passport-Flasher-windows/dist/*.exe
             AI-Passport-Flasher-linux/*.tar.gz
+            extract-play-exe/dist/extract_play.exe
           fail_on_unmatched_files: false
