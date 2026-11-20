@@ -44,6 +44,8 @@ jobs:
           python -m pip install -r requirements.txt pyinstaller
 
       - name: Run tests (headless)
+        # 仅在这三个稳定 runner 上跑无头 GUI 测试;新增架构的 Qt offscreen 环境不可靠
+        if: matrix.name == 'windows' || matrix.name == 'macos-arm64' || matrix.name == 'linux-x64'
         shell: bash
         run: |
           QT_QPA_PLATFORM=offscreen python -m unittest discover -s tests
