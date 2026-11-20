@@ -7,6 +7,13 @@
 - macOS 增加 **Intel(x64)** 版本;Linux 增加 **ARM64** 版本。
 - 刷写助手与 extract-play 工具现覆盖:Windows x64、macOS arm64/x64、Linux x64/arm64。
 
+## 1.3.0 — 2026-11-20
+
+**平台覆盖调整 / platform coverage**
+
+- 新增 **Linux ARM64** 版本(刷写助手 + extract-play)。
+- macOS 维持 **arm64**;Intel(x64) 因 GitHub 已停止供应 Intel macOS runner(macos-13 长期排队无法启动),暂不提供,Intel Mac 用户请用源码运行(需 Python)。
+
 ## 1.2.0 — 2026-11-20
 
 **extract-play 多平台 / extract-play multi-platform**
