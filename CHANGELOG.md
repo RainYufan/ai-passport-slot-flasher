@@ -1,5 +1,13 @@
 # Changelog · 更新日志
 
+## 1.2.0 — 2026-11-20
+
+**extract-play 多平台 / extract-play multi-platform**
+
+- 新增 `extract_play_gui` 图形界面(粘贴链接或拖入/选择本地合并镜像,一键提取)。
+- extract-play 工具现提供 Windows `.exe`、macOS `.dmg`、Linux `.tar.gz` 三个平台版本。
+- Release 同步附带 `extract_play`(命令行)与 `extract_play_gui`(图形)两种。
+
 ## 1.1.0 — 2026-11-15
 
 **更易安装 / Easier to install**
