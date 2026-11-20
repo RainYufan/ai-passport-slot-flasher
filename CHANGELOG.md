@@ -1,5 +1,12 @@
 # Changelog · 更新日志
 
+## 1.2.1 — 2026-11-20
+
+**更多平台架构 / more architectures**
+
+- macOS 增加 **Intel(x64)** 版本;Linux 增加 **ARM64** 版本。
+- 刷写助手与 extract-play 工具现覆盖:Windows x64、macOS arm64/x64、Linux x64/arm64。
+
 ## 1.2.0 — 2026-11-20
 
 **extract-play 多平台 / extract-play multi-platform**
